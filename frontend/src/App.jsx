@@ -1,35 +1,56 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import React, { useState } from 'react';
+import { Routes, Route, Link } from 'react-router-dom';
+import PostList from './components/PostList';
+import CreatePost from './components/CreatePost';
+import PostDetail from './components/PostDetail';
+import EditPost from './components/EditPost';
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [posts, setPosts] = useState([]);
+
+  // 게시글 추가
+  const addPost = (post) => setPosts(prev => [...prev, post]);
+  // 게시글 수정
+  const updatePost = (id, updated) => setPosts(prev => 
+    prev.map(p => p.id === id ? { ...p, ...updated } : p)
+  );
+  // 댓글 추가
+  const addComment = (postId, comment) => setPosts(prev => 
+    prev.map(p => p.id === postId ? { ...p, comments: [...p.comments, comment] } : p)
+  );
+  // 댓글 수정
+  const updateComment = (postId, commentId, updated) => setPosts(prev => 
+    prev.map(p => p.id === postId ? {
+      ...p,
+      comments: p.comments.map(c => c.id === commentId ? { ...c, ...updated } : c)
+    } : p)
+  );
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <div>
+      <nav style={{ padding: '1rem', borderBottom: '1px solid #ddd' }}>
+        <Link to="/">게시판 목록</Link>
+      </nav>
+      <Routes>
+        <Route path="/" element={<PostList posts={posts} />} />
+        <Route path="/create" element={<CreatePost addPost={addPost} />} />
+        <Route
+          path="/post/:id"
+          element={
+            <PostDetail
+              posts={posts}
+              addComment={addComment}
+              updateComment={updateComment}
+            />
+          }
+        />
+        <Route
+          path="/edit/:id"
+          element={<EditPost posts={posts} updatePost={updatePost} />}
+        />
+      </Routes>
+    </div>
+  );
 }
 
 export default App
