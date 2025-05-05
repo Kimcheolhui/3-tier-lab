@@ -1,7 +1,0 @@
-apiVersion: v1
-type: ConfigMap
-metadata:
-  name: frontend-cm
-  metadata: nuc01 # You need to replace this with your own namespace
-data:
-  
