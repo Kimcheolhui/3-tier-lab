@@ -21,16 +21,10 @@ export class PostsController {
     return this.postService.createPost(createPostDto);
   }
 
-  // Get all posts
+  // Get all posts or by keyword (keyword can be null)
   @Get()
-  getAllPosts(): Promise<PostResDto[]> {
-    return this.postService.getPosts();
-  }
-
-  // Get posts by keyword
-  @Get()
-  searchPosts(@Query('keyword') keyword: string): Promise<PostResDto[]> {
-    return this.postService.getPosts(keyword);
+  searchPosts(@Query('keyword') keyword?: string): Promise<PostResDto[]> {
+    return this.postService.getPosts(keyword || '');
   }
 
   // Get a single post by post ID
