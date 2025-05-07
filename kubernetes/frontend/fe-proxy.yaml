@@ -13,12 +13,22 @@ spec:
       labels:
         app: nginx-proxy
     spec:
+      volumes:
+        - name: fe-serving-config
+          configMap:
+            name: nginx-proxy-cm
+            items:
+              - key: app.conf
+                path: app.conf
       containers:
         - name: nginx
           image: "tori209/test-image:latest"
           imagePullPolicy: Always
           ports:
             - containerPort: 80
+          volumeMounts:
+            - name: fe-serving-config
+              mountPath: /etc/nginx/conf.d
           resources:
             requests:
               cpu: 100m
