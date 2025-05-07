@@ -7,6 +7,7 @@ import {
   Body,
   Query,
   ParseIntPipe,
+  Put,
 } from '@nestjs/common';
 import { PostService } from './post.service';
 import { CreatePostDto, DeletePostDto, PostResDto } from './post.dto';
@@ -31,6 +32,14 @@ export class PostsController {
   @Get(':id')
   getPost(@Param('id', ParseIntPipe) id: number): Promise<PostResDto> {
     return this.postService.getPost(id);
+  }
+
+  @Put(':id')
+  updatePost(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updatePostDto: CreatePostDto,
+  ): Promise<PostResDto> {
+    return this.postService.updatePost(id, updatePostDto);
   }
 
   // Delete a post by post ID

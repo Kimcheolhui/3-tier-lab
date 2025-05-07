@@ -101,6 +101,23 @@ export class PostService {
     return post;
   }
 
+  async updatePost(
+    id: number,
+    updatePostDto: CreatePostDto,
+  ): Promise<PostResDto> {
+    const post = await this.prismaService.post.findUnique({ where: { id } });
+
+    if (!post) throw new NotFoundException('post not found');
+
+    const hash = await this.cryptoService.hash(updatePostDto.password);
+
+    return await this.prismaService.post.update({
+      where: { id },
+      data: { ...updatePostDto, password: hash },
+      include: { comments: true },
+    });
+  }
+
   async deletePost(id: number, deletePostDto: DeletePostDto): Promise<void> {
     const post = await this.prismaService.post.findUnique({ where: { id } });
 
