@@ -3,7 +3,7 @@ kind: PersistentVolume
 metadata:
   name: postgres-pv-<YOUR_NAMESPACE>
   labels:
-    volume: postgres-pv
+    volume: postgres-pv-<YOUR_NAMESPACE>
 spec:
   capacity:
     storage: 5Gi
