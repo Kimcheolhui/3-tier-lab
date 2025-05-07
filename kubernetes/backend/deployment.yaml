@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: api
-          image: <your_docker_hub_repository>/<your_docker_image_name>:latest # You need to replace this with your own Docker Hub repository and image name
+          image: cjfgml0306/backend:latest
           ports:
             - containerPort: 3000
           envFrom:
