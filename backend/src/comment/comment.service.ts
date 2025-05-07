@@ -33,6 +33,28 @@ export class CommentService {
     return comment;
   }
 
+  async updateComment(
+    postId: number,
+    id: number,
+    updateCommentDto: CreateCommentDto,
+  ): Promise<CommentResDto> {
+    const comment = await this.prismaService.comment.findUnique({
+      where: { id },
+    });
+    if (!comment || comment.postId !== postId)
+      throw new NotFoundException('comment not found');
+    const ok = await this.cryptoService.compare(
+      updateCommentDto.password,
+      comment.password,
+    );
+    if (!ok) throw new ForbiddenException('wrong password');
+
+    return await this.prismaService.comment.update({
+      where: { id },
+      data: { ...updateCommentDto },
+    });
+  }
+
   async deleteComment(
     postId: number,
     id: number,

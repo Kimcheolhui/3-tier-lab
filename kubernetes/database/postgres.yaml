@@ -56,6 +56,9 @@ spec:
       spec:
         accessModes: ["ReadWriteOnce"]
         storageClassName: standard
+        selector:
+          matchLabels:
+            volume: postgres-pv-<YOUR_NAMESPACE>
         resources:
           requests:
             storage: 5Gi

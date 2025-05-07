@@ -5,6 +5,7 @@ import {
   Body,
   Param,
   ParseIntPipe,
+  Patch,
 } from '@nestjs/common';
 import { CommentService } from './comment.service';
 import {
@@ -25,6 +26,17 @@ export class CommentController {
   ): Promise<CommentResDto> {
     return this.commentService.createComment(postId, createCommentDto);
   }
+
+  @Patch(':id')
+  updateComment(
+    @Param('postId', ParseIntPipe) postId: number,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateCommentDto: CreateCommentDto,
+  ): Promise<CommentResDto> {
+    return this.commentService.updateComment(postId, id, updateCommentDto);
+  }
+
+  // Get all comments for a specific post
 
   // Delete a comment by comment ID for a specific post
   @Delete(':id')
