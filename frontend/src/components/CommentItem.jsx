@@ -12,7 +12,7 @@ function CommentItem({ comment, postId }) {
   const handleEdit = async e => {
     e.preventDefault();
     try {
-      const { data } = await api.put(
+      const { data } = await api.patch(
         `/post/${postId}/comment/${comment.id}`,
         { content, password }
       );

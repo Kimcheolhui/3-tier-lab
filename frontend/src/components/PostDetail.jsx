@@ -9,6 +9,8 @@ function PostDetail() {
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [password, setPassword] = useState('');
+  const [tryDelete, setTryDelete] = useState(false);
 
   const [commentUsername, setCommentUsername] = useState('');
   const [commentPassword, setCommentPassword] = useState('');
@@ -41,6 +43,14 @@ function PostDetail() {
     }
   };
 
+  const handleDelete = async e => {
+    e.preventDefault();
+    const { data } = await api.delete(`/post/${id}`, {
+      data: { password }
+    })
+    navigate('/')
+  }
+
   if (loading) return <p>로딩 중...</p>;
   if (error) return <p>게시글을 불러오는 중 오류가 발생했습니다.</p>;
   if (!post) return <p>게시글이 없습니다.</p>;
@@ -51,7 +61,22 @@ function PostDetail() {
       <p>작성자: {post.username}</p>
       <p>작성일: {new Date(post.created_at).toLocaleString('ko-KR')}</p>
       <p>{post.content}</p>
-      <button onClick={() => navigate(`/edit/${id}`)}>수정</button>
+      
+      {
+        tryDelete ?
+        <form onSubmit={handleDelete}>
+          <input type="password" placeholder='패스워드 확인' value={password} onChange={e => setPassword(e.target.value)} required />
+          <br/>
+          <button type='submit'> 삭제 </button>
+          <button type='button' onClick={()=>setTryDelete(false)}> 취소 </button>
+        </form>
+        :
+        <>
+        <button onClick={() => navigate(`/edit/${id}`)}>수정</button>
+        <button onClick={() => {setPassword(''); setTryDelete(true)}}>삭제</button>
+        </>
+      }
+      
 
       <form onSubmit={handleComment} style={{ margin: '1rem 0' }}>
         <h3>댓글 작성</h3>
