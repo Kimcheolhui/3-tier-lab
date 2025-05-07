@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import api from '../api';
 
 function PostList() {
@@ -66,7 +66,7 @@ function PostList() {
             <tr key={post.id}>
               <td style={{ border: '1px solid #ddd', padding: '0.5rem' }}>{post.id}</td>
               <td style={{ border: '1px solid #ddd', padding: '0.5rem' }}>
-                <a href={`/post/${post.id}`}>{post.title}</a>
+                <Link to={`/post/${post.id}`}>{post.title}</Link>
               </td>
               <td style={{ border: '1px solid #ddd', padding: '0.5rem' }}>{post.username}</td>
               <td style={{ border: '1px solid #ddd', padding: '0.5rem' }}>
