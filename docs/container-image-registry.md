@@ -128,3 +128,23 @@ kubectl get service -n <your_namespace>
 ```shell
 sudo vim /etc/docker/daemon.json
 ```
+
+```shell
+sudo systemctl restart docker
+```
+
+```shell
+sudo docker build -t <your_namespace>-frontend ~/<your_namespace>/3-tier-lab/frontend
+sudo docker tag <your_namespace>-frontend <svc-ip>/<your_namespace>-frontend
+sudo docker push <svc-ip>/<your_namespace>-frontend
+```
+
+```shell
+sudo docker build -t <your_namespace>-backend ~/<your_namespace>/3-tier-lab/backend
+sudo docker tag <your_namespace>-backend <svc-ip>/<your_namespace>-backend
+sudo docker push <svc-ip>/<your_namespace>-backend
+```
+
+```shell
+ls -al /mnt/data/<your_namespace>/registry/docker/registry/v2/repositories
+```
