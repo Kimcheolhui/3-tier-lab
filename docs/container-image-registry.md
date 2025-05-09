@@ -94,6 +94,8 @@ spec:
         - name: registry-storage
           persistentVolumeClaim:
             claimName: container-image-registry-pvc-<your_namespace>
+      nodeSelector:
+        kubernetes.io/hostname: <your_namespace>
 ```
 
 ```shell
