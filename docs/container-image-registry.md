@@ -1,3 +1,8 @@
+```shell
+cd ~/<your_namespace>/3-tier-lab/kubernetes/container
+vim container-image-registry-pv.yaml
+```
+
 ```yaml
 apiVersion: v1
 kind: PersistentVolume
@@ -26,7 +31,12 @@ spec:
 ```
 
 ```shell
+kubectl apply -f container-image-registry-pv.yaml
 kubectl get pv
+```
+
+```shell
+vim container-image-registry-pvc.yaml
 ```
 
 ```yaml
@@ -48,7 +58,12 @@ spec:
 ```
 
 ```shell
+kubectl apply -f container-image-registry-pvc.yaml
 kubectl get pvc -n <your_namespace>
+```
+
+```shell
+vim container-image-registry.yaml
 ```
 
 ```yaml
@@ -83,7 +98,12 @@ spec:
 ```
 
 ```shell
+kubectl apply -f container-image-registry.yaml
 kubectl get deploy -n <your_namespace>
+```
+
+```shell
+vim container-image-registry-svc.yaml
 ```
 
 ```yaml
@@ -98,11 +118,12 @@ spec:
     app: container-image-registry
   ports:
     port: 80
-      targetPort: 5000
+    targetPort: 5000
   type: ClusterIP
 ```
 
 ```shell
+kubectl apply -f container-image-registry-svc.yaml
 kubectl get service -n <your_namespace>
 ```
 
