@@ -109,16 +109,21 @@ export class PostService {
 
     if (!post) throw new NotFoundException('post not found');
 
-    const hash = await this.cryptoService.hash(updatePostDto.password);
+    const ok = await this.cryptoService.compare(
+      updatePostDto.password,
+      post.password,
+    );
+
+    if (!ok) throw new ForbiddenException('wrong password');
 
     return await this.prismaService.post.update({
       where: { id },
-      data: { ...updatePostDto, password: hash },
+      data: { title: updatePostDto.title, content: updatePostDto.content },
       include: { comments: true },
     });
   }
 
-  async deletePost(id: number, deletePostDto: DeletePostDto): Promise<void> {
+  async deletePost(id: number, deletePostDto: DeletePostDto): Promise<any> {
     const post = await this.prismaService.post.findUnique({ where: { id } });
 
     if (!post) throw new NotFoundException('post not found');
@@ -130,5 +135,7 @@ export class PostService {
     if (!ok) throw new ForbiddenException('wrong password');
 
     await this.prismaService.post.delete({ where: { id } });
+
+    return { message: 'Post deleted successfully' };
   }
 }

@@ -51,7 +51,7 @@ export class CommentService {
 
     return await this.prismaService.comment.update({
       where: { id },
-      data: { ...updateCommentDto },
+      data: { content: updateCommentDto.content },
     });
   }
 
@@ -59,7 +59,7 @@ export class CommentService {
     postId: number,
     id: number,
     dto: DeleteCommentDto,
-  ): Promise<void> {
+  ): Promise<any> {
     const comment = await this.prismaService.comment.findUnique({
       where: { id },
     });
@@ -69,5 +69,7 @@ export class CommentService {
     if (!ok) throw new ForbiddenException('wrong password');
 
     await this.prismaService.comment.delete({ where: { id } });
+
+    return { message: 'comment deleted' };
   }
 }
