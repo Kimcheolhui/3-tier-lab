@@ -32,6 +32,9 @@
 └── README.md
 ```
 
+각자 nuc01, nuc02, nuc03 디렉터리 만들고 그 안에서 git clone 받도록 해야 함
+그리고 각자 네임스페이스를 만들도록 명령어 추가
+
 ## Database deployment on Kubernetes
 
 **Deploy `postgres-pv.yaml`**
@@ -39,6 +42,7 @@
 Persistent Volume 생성
 
 ```bash
+# 여기 경로도 수정해야 함
 cd ~/3-tier-lab/kubernetes/database
 vim postgres-pv.yaml
 ```
@@ -57,7 +61,7 @@ spec:
     - ReadWriteOnce
   storageClassName: standard
   hostPath:
-    path: /mnt/data/postgres
+    path: /mnt/data/postgres #여기 각각의 nuc마다 경로 다르게 /mnt/data/nuc01/postgres
   persistentVolumeReclaimPolicy: Retain
 ```
 
@@ -151,6 +155,7 @@ kubectl get statefulset -n <your_namespace>
 **Deploy `secret.yaml`**
 
 ```bash
+# 여기도 경로 수정
 cd ~/3-tier-lab/kubernetes/backend
 vim secret.yaml
 ```
