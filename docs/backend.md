@@ -1,0 +1,288 @@
+# Backend deployment
+
+### Directory Architecture
+
+```bash
+.
+├── backend
+│   ├── dist
+│   ├── Dockerfile
+│   ├── eslint.config.mjs
+│   ├── nest-cli.json
+│   ├── node_modules
+│   ├── package-lock.json
+│   ├── package.json
+│   ├── prisma
+│   ├── README.md
+│   ├── src
+│   ├── tsconfig.build.json
+│   └── tsconfig.json
+├── frontend
+│   ├── eslint.config.js
+│   ├── index.html
+│   ├── package-lock.json
+│   ├── package.json
+│   ├── public
+│   ├── README.md
+│   ├── src
+│   └── vite.config.js
+├── kubernetes
+│   ├── backend
+│   └── database
+└── README.md
+```
+
+## Database deployment on Kubernetes
+
+**Deploy `postgres-pv.yaml`**
+
+Persistent Volume 생성
+
+```bash
+cd ~/3-tier-lab/kubernetes/database
+vim postgres-pv.yaml
+```
+
+```yaml
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: postgres-pv-<your_namespace>
+  labels:
+    volume: postgres-pv-<your_namespace>
+spec:
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: standard
+  hostPath:
+    path: /mnt/data/postgres
+  persistentVolumeReclaimPolicy: Retain
+```
+
+```bash
+kubectl apply -f postgres-pv.yaml
+kubectl get pv
+```
+
+**Deploy `postgres.yaml`**
+
+```bash
+vim postgres.yaml
+```
+
+```yaml
+# postgres.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: postgres-secret
+  namespace: <your_namespace> # You need to replace this with your own namespace
+type: Opaque
+stringData:
+  POSTGRES_USER: myuser
+  POSTGRES_PASSWORD: mypassword # Don't use this kind of password in real life. It's just for study.
+  POSTGRES_DB: mydb
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: <your_namespace> # You need to replace this with your own namespace
+spec:
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+  namespace: <your_namespace> # You need to replace this with your own namespace
+spec:
+  serviceName: postgres
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16
+          envFrom:
+            - secretRef:
+                name: postgres-secret
+          ports:
+            - containerPort: 5432
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: standard
+        selector:
+          matchLabels:
+            volume: postgres-pv-<your_namespace>
+        resources:
+          requests:
+            storage: 5Gi
+```
+
+```bash
+kubectl apply -f postgres.yaml
+kubectl get secret -n <your_namespace>
+kubectl get svc -n <your_namespace>
+kubectl get statefulset -n <your_namespace>
+```
+
+## Backend deployment on Kubernetes
+
+**Deploy `secret.yaml`**
+
+```bash
+cd ~/3-tier-lab/kubernetes/backend
+vim secret.yaml
+```
+
+```yaml
+# secret.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: backend-secret
+  namespace: <your_namespace> # You need to replace this with your own namespace
+type: Opaque
+stringData:
+  DATABASE_URL: "postgresql://myuser:mypassword@postgres.<your_namespace>.svc.cluster.local:5432/mydb"
+  PASSWORD_SECRET: <your_password_secret> # You need to replace this with your own secret like random string
+```
+
+```bash
+kubectl apply -f secret.yaml
+kubectl get secret -n <your_namespace>
+```
+
+**Deploy `deployment.yaml`**
+
+```bash
+vim deployment.yaml
+```
+
+```yaml
+# deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-api
+  namespace: <your_namespace> # You need to replace this with your own namespace
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: backend-api
+  template:
+    metadata:
+      labels:
+        app: backend-api
+    spec:
+      containers:
+        - name: api
+          image: cjfgml0306/backend:latest
+          ports:
+            - containerPort: 3000
+          envFrom:
+            - secretRef:
+                name: backend-secret
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+```
+
+```bash
+kubectl apply -f deployment.yaml
+kubectl get deploy -n <your_namespace>
+```
+
+**Deploy `service.yaml`**
+
+```bash
+vim service.yaml
+```
+
+```yaml
+# service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-svc
+  namespace: <your_namespace> # You need to replace this with your own namespace
+spec:
+  selector:
+    app: backend-api
+  ports:
+    - port: 80
+      targetPort: 3000
+  type: ClusterIP
+```
+
+```bash
+kubectl apply -f service.yaml
+kubectl get svc -n <your_namespace>
+```
+
+# Helm Install / Prometheus+Grafana Deployment
+
+## Helm Install
+
+```bash
+cd ~
+curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+chmod 700 get_helm.sh
+./get_helm.sh
+```
+
+```bash
+helm version
+helm repo list
+helm list -A
+```
+
+## Prometheus + Grafana Install
+
+```bash
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm repo list
+helm repo update
+```
+
+```bash
+helm list -n <your_namespace>
+helm install prometheus prometheus-community/kube-prometheus-stack -n <your_namespace> --create-namespace
+helm list -n <your_namespace>
+
+kubectl get pods -n <your_namespace>
+kubectl get svc -n <your_namespace>
+
+# prometheus-grafana의 svc에 해당하는 ip로 접근
+```
+
+```bash
+# ID: admin
+# PW: 아래 출력 결과output (아마 prom-operator)
+kubectl get secret --namespace <your_namespace> monitoring-grafana -o jsonpath="{.data.admin-password}" | base64 --decode ; echo
+```

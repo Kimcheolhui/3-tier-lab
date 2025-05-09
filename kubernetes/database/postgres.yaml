@@ -58,7 +58,7 @@ spec:
         storageClassName: standard
         selector:
           matchLabels:
-            volume: postgres-pv-<YOUR_NAMESPACE>
+            volume: postgres-pv-<your_namespace>
         resources:
           requests:
             storage: 5Gi
