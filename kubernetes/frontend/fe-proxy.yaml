@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nginx-proxy
-  namespace: nuc01
+  namespace: <your_namespace>
 spec:
   replicas: 1
   selector:
