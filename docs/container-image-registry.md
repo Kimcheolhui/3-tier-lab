@@ -93,7 +93,7 @@ spec:
       volumes:
         - name: registry-storage
           persistentVolumeClaim:
-            claimName: image-registry-pvc-<your_namespace>
+            claimName: container-image-registry-pvc-<your_namespace>
 ```
 
 ```shell
