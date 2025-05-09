@@ -43,7 +43,7 @@ vim container-image-registry-pvc.yaml
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: container-image-registry-pvc
+  name: container-image-registry-pvc-<your_namespace>
   namespace: <your_namespace>
 spec:
   accessModes:
