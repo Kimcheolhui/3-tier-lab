@@ -67,7 +67,6 @@ vim container-image-registry.yaml
 ```
 
 ```yaml
-# registry.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -107,7 +106,6 @@ vim container-image-registry-svc.yaml
 ```
 
 ```yaml
-# registry-service-<your_namespace>.yaml
 apiVersion: v1
 kind: Service
 metadata:
@@ -117,8 +115,8 @@ spec:
   selector:
     app: container-image-registry
   ports:
-    port: 80
-    targetPort: 5000
+    - port: 80
+      targetPort: 5000
   type: ClusterIP
 ```
 
