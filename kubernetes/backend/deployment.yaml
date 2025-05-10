@@ -3,7 +3,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: backend-api
-  namespace: nuc01 # You need to replace this with your own namespace
+  namespace: <your_namespace> # You need to replace this with your own namespace
 spec:
   replicas: 1
   selector:
