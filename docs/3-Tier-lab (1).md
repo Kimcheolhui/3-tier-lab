@@ -21,7 +21,7 @@
 
 ## 1-1. 3-Tier Architecture
 
-**3-Tier Architecture**란, 하나의 애플리케이션을 기능별로 세 개의 계층으로 분리(물리적/논리적)하여 구성하는 아키테쳐 설계 방식입니다.
+**3-Tier Architecture**란, 하나의 애플리케이션을 기능별로 세 개의 계층으로 분리(물리적/논리적)하여 구성하는 아키텍텍쳐 설계 방식입니다.
 
 이는 특히 웹 서비스과 같이 사용자와 상호작용하고, 데이터를 처리하며, 이를 저장해야 하는 시스템에서 널리 사용됩니다.
 
@@ -652,10 +652,203 @@ kubectl get svc -n <your_namespace>
 
 지금까지 3-Tier Architecture의 Data Tier와 Application Tier에 대한 배포를 마쳤습니다.
 
-# 4. Frondend Deployment on Kubernetes
+# 4. Frontend Deployment on Kubernetes
 
-(4랑 5는 영호님이 작성해주시면 될 것 같아요!)
+## 4.1 FE Deployment 배경지식 요약
+
+### 4.1.1 Kubernetes Object: ConfigMap
+
+`4.2.1`에서 `ConfigMap`을 이용하여 설정 파일을 컨테이너에 삽입합니다. 그런데 여기서 사용하는 `ConfigMap`은 무엇일까요?
+
+`ConfigMap`이란 평문으로 설정값을 저장하는 쿠버네티스 오브젝트입니다. Backend에서 활용했던 `Secret`과는 다르게, 외부에 노출되어도 괜찮은 정보들, 가령 URL이나 Port 번호, Log Level 등을 저장하여 여러 Container에서 환경 변수나 파일 형태로 가져와 활용할 수 있습니다.
+
+`Secret`과 비슷하게, `ConfigMap`은 크게 2가지 방법으로 활용할 수 있습니다.
+
+1. `ConfigMap`을 컨테이너의 환경 변수로 사용
+2. `ConfigMap`을 컨테이너 내부에 파일로 마운트 (공식 문서 명칭으로 ConfigMap을 `Projection`(투사)한다고 말합니다.)
+
+이번 실습의 Frontend 배포에서 Configmap은 후술할 NGINX의 설정 파일을 추가하는 데에 사용되며, 이를 파일 형태로 가져오기 위한 방법을 `kubernetes/frontend/fe-proxy.yaml` 파일에서 확인핧 수 있습니다.
+
+
+> [!note]
+> 
+> 본 내용은 "시작하세요! 도커/쿠버네티스:친절한 설명으로 쉽게 이해하는 컨테이너 관리"(용찬호 저. 위키북스). pp 344~355의 내용을 일부 활용했습니다. 자세한 사항은 해당 도서를 참고해주시기 바랍니다. 
+
+### 4.1.2 React
+
+Meta에서 개발한 Javascript 기반 Frontend 개발 라이브러리입니다. Angular와 Vue와 함께 Frontend 개발을 위해 주로 사용하는 라이브러리입니다.
+
+단일 HTML 페이지에서 Javascript를 통해 페이지를 부분적으로 변경하여 서비스를 제공하는 SPA(Single Page Application) 방식의 웹서비스를를 개발할 때 사용하며, 페이지의 구성요소를 Component라는 단위로 쪼개어 개발하고, 웹페이지를 동적으로 구성할 때 페이지 전체를 새로 구성하는 대신, 변경된 부분만을 수정합니다.
+
+웹서비스 뿐만 아니라, 모바일 환경과 같은 네이티브 환경에서 UI를 개발할 때에 사용할 수 있습니다.
+
+> [!note]
+>
+> 본 실습을 진행하기 위해 React 프로젝트의 소스코드를 이해하지 않아도 되기에 많은 내용을 기술하지는 않았습니다. 하지만 React 코드가 궁금한 경우 `frontend/README.md`에 코드를 이해하는 데에 필요한 정보를 적어두었으니 참고하시기 바랍니다.
+
+### 4.1.3 NGINX
+
+사용자나 브라우저에게 HTML 및 Javascript를 제공하려면, Backend 서버가 사용자 요청에 따라 파일을 전달해주거나 Proxy 서버가 대신 파일을 전달해야 합니다. 전자의 경우 NestJS 서버에 별도의 설정을 통해 HTML 파일을 전달하도록 구성하며, 후자의 경우 NGINX를 도입하여 사용자의 요청을 NGINX가 대신 받고, 요청에 따라 파일을 전달해주거나, Backend 서버에게 요청을 포워딩합니다.
+
+![What-is-proxy](img/proxy.png)
+
+Proxy 서버를 배치할 경우, Backend 서버는 파일을 제공하는 로직을 신경쓰지 않고 서비스에만 집중할 수 있게 되며, Proxy가 일부 요청을 대신 처리하므로 부하 감소를 얻을 수 있습니다.
+
+NGINX는 이러한 목적을 위해 사용할 수 있는 프록시 서버로, 특정 요청에 대해 HTML과 같은 Static File을 대신 전달하거나, 요청에 알맞은 서버에게 요청을 포워딩하거나, 포워딩 과정에서 요청을 적절히 분산하여 부하를 고르게 부여하는 로드밸런싱을 수행할 수 있습니다.
+
+본 실습에서는 React 프로젝트로 생성된 HTML 및 Javascript 파일을 사용자에게 전달하고, 요청을 Backend Server에게 포워딩하는 역할을 수행합니다. 이를 위해 사전에 빌드된 Docker 이미지를 활용할 예정입니다.
+
+## 4.2 Frontend Deployment on Kubernetes
+
+> [!note]
+>
+> 본 실습은 사전에 빌드된 이미지파일을 사용합니다.  
+> 만약 웹UI를 수정하여 배포하고자 하는 경우, `./frontend` 경로에 프로젝트 원본 및 Dockerfile이 저장되어있으므로, 이를 활용하여 코드 수정 후 이미지를 새로 빌드해 활용하시기 바랍니다.
+
+### 4.2.1 Frontend ConfigMap 생성
+
+먼저, HTML 및 Javascript 파일을 NGINX를 통해 브라우저에게 전달할 수 있도록 설정하기 위해, ConfigMap을 생성하도록 하겠습니다.
+
+다음의 명령어로 `fe-proxy-cm.yaml` 파일을 열도록 하겠습니다.
+
+```bash
+cd ~/3-tier-lab/kubernetes/frontend
+vim fe-proxy-cm.yaml
+```
+
+`fe-proxy-cm.yaml` 파일에서 Namespace를 자신의 Namespace로 수정하고, `upstream` 부분의 URL을 Backend 서버의 URL로 수정하겠습니다. 파일 내용은 다음과 같이 구성됩니다.
+
+```YAML
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-proxy-cm
+  namespace: <your_namespace>    # EDIT THIS
+data:
+  app.conf: |    # EDIT THIS
+    upstream backend-svc {
+      server backend-svc.<your_namespace>.svc.cluster.local:80;
+    }
+    server {
+      listen 80;
+    
+      root /usr/share/nginx/html;
+      index index.html;
+      
+      location /api/ {
+        rewrite           ^/api(.*)$ $1 break;
+        proxy_pass        http://backend-svc;
+        proxy_redirect    off;
+        proxy_set_header  Host  $host;
+        proxy_set_header  X-Real-IP         $remote_addr;
+        proxy_set_header  X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header  X-Forwarded-Host  $server_name;
+      }
+    
+      location / {
+        try_files $uri /index.html;
+      }
+    }
+
+```
+
+위의 내용에서 `metadata.namespace`의 값을 자신의 Namespace로 수정하고, `data."app.conf"`의 `upstream.server`의 값을 Backend Service의 URL로 수정해주십시오. (참고: 동일 Cluster 내 Service의 FQDN: `<svc-name>.<namespace>.svc.cluster.local`)
+
+수정 후, 다음의 명령어를 입력하여 ConfigMap을 생성합니다.
+
+```bash
+kubectl apply -f ./fe-proxy-cm.yaml
+```
+
+이후, 제대로 생성되었는지 확인하기 위해 다음의 명령어를 입력합니다.
+
+```bash
+kubectl get cm -n <your_namespace>  # 네임스페이스에 존재하는 ConfigMap 목록 확인 
+kubectl describe cm nginx-proxy-cm -n <your_namespace> # nginx-proxy-cm의 내용 확인
+```
+
+### 4.2.2 Frontend Deployment 생성
+
+다음으로, HTML 파일이 포함된 NGINX Deployment를 생성하도록 하겠습니다.
+
+하단의 명령어를 입력하여 `fe-proxy.yaml` 파일을 열도록 하겠습니다.
+
+```bash
+vim ./fe-proxy.yaml
+```
+
+`fe-proxy.yaml` 파일의 내용은 다음과 같습니다. 파일 내용에서 `metadata.namespace`의 값을 자신의 Namespace로 수정합니다.
+
+```YAML
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-proxy
+  namespace: <your_namespace>    # EDIT THIS
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx-proxy
+  template:
+    metadata:
+      labels:
+        app: nginx-proxy
+    spec:
+      volumes:
+        - name: fe-serving-config
+          configMap:
+            name: nginx-proxy-cm
+            items:
+              - key: app.conf
+                path: app.conf
+      containers:
+        - name: nginx
+          image: "tori209/smartx-fe:latest"
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: fe-serving-config
+              mountPath: /etc/nginx/conf.d
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+```
+
+수정 후, 다음의 명령어를 입력하여 NGINX Deployment를 생성합니다.
+
+```bash
+kubectl apply -f ./fe-proxy.yaml
+```
+
+이후, 제대로 생성되었는지 확인하기 위해 다음의 명령어를 입력합니다.
+
+```bash
+kubectl get deploy -n <your_namespace>  # 네임스페이스에 존재하는 Deployment 목록 확인 
+kubectl describe deploy nginx-proxy -n <your_namespace> # nginx-proxy의 내용 확인
+kubectl get pod -n <your_namespace> # Deployment에 의한 Pod 생성 확인
+```
 
 # 5. 배포된 웹 서비스 확인
+
+이제, 브라우저를 통해 배포된 웹 서비스에 접근해보겠습니다. 다음을 입력하여 접근할 IP 주소를 확인하겠습니다.
+
+```bash
+# 간단하게 확인하는 방법
+kubectl get pod -n <your_namespace> -o wide | grep nginx-proxy
+```
+
+위의 명령을 통해 다음과 같은 구조로 출력됩니다.
+```text
+nginx-proxy-7c554b57c5-ddnvx   1/1     Running   0          3d20h   10.2.1.73    s4     <none>           <none>
+```
+위의 예시의 경우, 접근할 IP 주소는 `10.2.1.73`입니다. 본인의 화면에서 출력된 IP 주소를 복사합니다.
+
+이후, 브라우저의 주소창에 `http://<nginx-ip-addr>`을 입력해 접근합니다.
 
 # 6. Lab Review

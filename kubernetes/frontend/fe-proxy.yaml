@@ -22,7 +22,7 @@ spec:
                 path: app.conf
       containers:
         - name: nginx
-          image: "tori209/test-image:latest"
+          image: "tori209/smartx-fe:latest"
           imagePullPolicy: Always
           ports:
             - containerPort: 80

@@ -12,29 +12,32 @@
 - `npm run dev`를 통해 React 프로젝트의 결과물을 확인할 수 있다.
   - 파일 변경을 감지하여 실시간으로 반영하므로 참고한다.
 - 작업 완료 후, `npm run build`를 실행하여 단일 파일로 가공한다. 이를 백엔드 서버의 Static File로 전달하여 활용한다.
-  - 이를 실행할 경우 `dist` 경로에 결과물이 생성되며, 자동으로 `../backend/public`으로 복제된다.
+  - 이를 실행할 경우 `dist` 경로에 결과물이 생성된다.
 - `npm run <cmd>`로 실행되는 코드는 `package.json`의 `scripts.<cmd>`를 참고한다.
 
 ## 디렉토리 구조도
 - 코드 설명 상세는 파일 내 주석과 후술할 "React 기초"를 참고한다.
 ```text
 frontend
-├ dist: `npm run build`으로 생성된 HTML, CSS, JS 파일이 저장된다. 
-├ node_modules: React 개발 프로젝트 진행에 필요한 의존성 패키지가 저장된다. `npm install` 실행 시 해당 디렉토리가 생성된다.
-├ public: 웹페이지에 포함될 이미지(.img, .svg 등)나 css 등이 포함된다.
-├ src: React 프로젝트의 소스코드를 저장/관리하는 디렉토리.
-│   ├ asset: 소스코드에서 활용할 여러 static 파일을 저장한다.
-│   ├ component: 버튼이라 Table의 Row, 댓글창의 단일 댓글 등 소규모 공통 요소들을 관리하는 디렉토리.
-│   │   ├ CommmentItem.jsx: 댓글 목록에 포함되는, 단일 댓글을 의미한다.
-│   │   ├ CreatePost.jsx: 게시글 작성 화면.
-│   │   ├ EditPost.jsx: 게시글 수정 화면.
-│   │   ├ PostDetail.jsx: 단일 게시글 조회 화면. CommentItem.jsx을 이용하여 댓글 목록을 구현한다.
-│   │   └ PostList.jsx: 게시글 목록 조회 화면.
-│   ├ api.js: HTTP Client 패키지인 axios를 사용하기 좋은 형태로 가공한 파일. Web에서 HTTP 요청을 보낼 때 이를 활용한다.
-│   ├ App.jsx: React App.의 Root에 해당하는 부분. 본 프로젝트에서는 Client Side Routing을 정의하기 위해 사용된다.
-│   └ main.jsx: React App.를 실제로 HTML에 Load해주는 요소. 가령, `index.html` 파일을 브라우저가 전달받은 경우, 
-│         이를 이용하여 `<div id="root"></div>`에 React App.을 로드하는 역할을 수행한다.
-└ index.html: Base HTML 파일. 해당 페이지가 React의 JS 코드를 다운로드하여 React App.이 브라우저에 호출되도록 한다.
+├─ dist: `npm run build`으로 생성된 HTML, CSS, JS 파일이 저장된다. 
+├─ node_modules: React 개발 프로젝트 진행에 필요한 의존성 패키지가 저장된다. `npm install` 실행 시 해당 디렉토리가 생성된다.
+├─ public: 웹페이지에 포함될 이미지(.img, .svg 등)나 css 등이 포함된다.
+├─ src: React 프로젝트의 소스코드를 저장/관리하는 디렉토리.
+│   ├─ asset: 소스코드에서 활용할 여러 static 파일을 저장한다.
+│   ├─ component: 버튼이라 Table의 Row, 댓글창의 단일 댓글 등 소규모 공통 요소들을 관리하는 디렉토리.
+│   │   ├─ CommmentItem.jsx: 댓글 목록에 포함되는, 단일 댓글을 의미한다.
+│   │   ├─ CreatePost.jsx: 게시글 작성 화면.
+│   │   ├─ EditPost.jsx: 게시글 수정 화면.
+│   │   ├─ PostDetail.jsx: 단일 게시글 조회 화면. CommentItem.jsx을 이용하여 댓글 목록을 구현한다.
+│   │   └─ PostList.jsx: 게시글 목록 조회 화면.
+│   ├─ api.js: HTTP Client 패키지인 axios를 사용하기 좋은 형태로 가공한 파일. Web에서 HTTP 요청을 보낼 때 이를 활용한다.
+│   ├─ App.jsx: React App.의 Root에 해당하는 부분. 본 프로젝트에서는 Client Side Routing을 정의하기 위해 사용된다.
+│   └─ main.jsx: React App.를 실제로 HTML에 Load해주는 요소. 가령, `index.html` 파일을 브라우저가 전달받은 경우, 
+│             이를 이용하여 `<div id="root"></div>`에 React App.을 로드하는 역할을 수행한다.
+├─ index.html: Base HTML 파일. 해당 페이지가 React의 JS 코드를 다운로드하여 React App.이 브라우저에 호출되도록 한다.
+├─ Dockerfile: 프로젝트 빌드 결과물을 포함한 NGINX 이미지를 빌드하는 데이 쓰이는 파일이다.
+│        `app.conf` 파일을 복제하는 코드가 주석처리 되어있으니 참고한다.
+└─ app.conf: NGINX에서 HTML 파일을 서빙하는 데에 쓰이는 설정 파일 샘플.
 ```
 
 ## React 기초
