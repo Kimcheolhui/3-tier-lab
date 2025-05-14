@@ -7,7 +7,7 @@
 
 - PostgreSQL Database를 쿠버네티스 위에 배포
 - NestJS 기반 Backend를 쿠버네티스 위에 배포하고, 데이터베이스와 연결
-- Nginx와 React 어쩌고 저쩌고 (영호님 작성 부탁드립니다!)
+- NGINX를 활용해 React를 기반 웹페이지를 전달하거나, Backend에게 요청 포워딩
 
 > [!note]
 >
@@ -836,19 +836,152 @@ kubectl get pod -n <your_namespace> # Deployment에 의한 Pod 생성 확인
 
 # 5. 배포된 웹 서비스 확인
 
-이제, 브라우저를 통해 배포된 웹 서비스에 접근해보겠습니다. 다음을 입력하여 접근할 IP 주소를 확인하겠습니다.
+## 5.1. 브라우저 접근
+
+### 5.1.1. 웹서버 IP 확인
+이제, 브라우저를 통해 배포된 웹 서비스에 접근하기 위해 다음을 입력하여 접근할 IP 주소를 확인하겠습니다.
 
 ```bash
-# 간단하게 확인하는 방법
-kubectl get pod -n <your_namespace> -o wide | grep nginx-proxy
+# `-o wide`: 출력에 더 많은 정보(Cluster-wide IP, Node Name, ...)를 표시합니다.
+kubectl get pod -n <your_namespace> -o wide
 ```
 
-위의 명령을 통해 다음과 같은 구조로 출력됩니다.
-```text
-nginx-proxy-7c554b57c5-ddnvx   1/1     Running   0          3d20h   10.2.1.73    s4     <none>           <none>
-```
-위의 예시의 경우, 접근할 IP 주소는 `10.2.1.73`입니다. 본인의 화면에서 출력된 IP 주소를 복사합니다.
+위의 명령을 통해 다음과 같이 출력됩니다. 이 중에서 `nginx-proxy`로 시작하는 Pod의 IP를 복사합니다.
 
-이후, 브라우저의 주소창에 `http://<nginx-ip-addr>`을 입력해 접근합니다.
+![Deploy List](./img/deploy-complete.png)
+
+위의 예시의 경우, 접근할 IP 주소는 `10.2.1.73`입니다.
+
+> [!NOTE]
+>
+> 일반적으로 Pod의 Cluster 내부 IP를 이용하여 Pod에 접근할 수 없으나, 장비가 Cluster의 Node로 포함된 경우에 한하여 직접 접근이 가능합니다.
+> 이는 각 Node에서 Pod에게 패킷을 전달하기 위해, Kernel Routing Table과 IPTables에 Pod에게 패킷을 전달할 방법을 명시하기 때문입니다.
+
+### 5.1.2 웹서비스 확인
+
+브라우저의 주소창에 `http://<nginx-ip-addr>`을 입력해 접근합니다. 그러면 다음과 같은 화면이 표시됩니다. 
+
+![WebPage_Main](./img/webpage.png)
+
+우리가 배포한 것은 익명 게시판 서비스로, 회원가입 없이 누구나 게시글을 작성하고 조회할 수 있습니다. 현재는 어떠한 게시글도 등록되지 않아 게시글이 보이지 않는 상태입니다. '게시글 작성' 버튼을 눌러 게시글을 추가해보도록 하겠습니다. 버튼을 클릭하면 다음과 같은 화면이 보입니다.
+
+
+![WebPage_Write](./img/write.png)
+
+원하는 제목과 닉네임, 패스워드, 본문 내용을 작성한 뒤, "작성" 버튼을 클릭합니다. <br>
+그러면 다음과 같이, 자신이 작성한 글을 확인할 수 있습니다.
+
+> [!Note]
+>
+> Ubuntu 설치 과정에서 한글 입력기를 별도로 추가하지 않았다면, 한글을 입력할 수 없으니 유의 바랍니다. <br>
+> 설정 방법은 이번 실습과 무관하므로 별도로 설명하지 않지만, 인터넷에 다양한 참고 자료가 있으니 이를 활용하시기 바랍니다.
+
+![WebPage_with_post](./img/list-with-post.png)
+
+다음으로, 검색 기능을 확인해보겠습니다. 현 검색 기능은 제목+본문 검색을 수행하니 참고 바랍니다.
+
+![WebPage_Search](./img/post-search.png)
+
+확인이 끝났다면 "게시판 목록"을 클릭하여 되돌아오겠습니다. <br>
+다음으로 자신이 작성한 글을 클릭하여 확인해보겠습니다.
+
+![WebPage_Detail](./img/post-without-comment.png)
+
+화면과 같이 작성했던 제목과 닉네임, 본문 내용을 볼 수 있으며, 댓글 작성칸, 댓글 목록을 확인할 수 있습니다.
+
+이제 댓글을 추가하겠습니다. 원하는 내용을 적고 "댓글 작성" 버튼을 누르면 다음과 같이 확인할 수 있습니다.
+
+![WebPage_WithComment](./img/post-with-comment.png)
+
+이제 게시글을 수정해보겠습니다. "수정" 버튼을 클릭하면 다음과 같은 수정 페이지를 확인할 수 있습니다.
+
+![WebPage_Edit](./img/edit-post.png)
+
+원하는 문구로 수정한 뒤, 올바른 패스워드를 입력하면 수정이 완료됩니다. <br>
+만약 패스워드 오류, 혹은 서버 오류 발생 시 오류 메세지가 출력되니 참고 바랍니다.
+
+추가로, 패스워드도 동일한 방법으로 수정이 가능합니다.
+
+![WebPage_Editing](./img/comment-editing.png)
+
+수정이 완료되면 다음과 같이 확인할 수 있습니다.
+
+![WebPage_AfterEdit](./img/post-after-edit.png)
+
+마지막으로 Post를 삭제하겠습니다. "삭제" 버튼을 누른 뒤, 게시글 패스워드를 입력하여 삭제해주십시오.
+그러면 다음과 같이 삭제된 것을 확인할 수 있습니다.
+
+![WebPage_AfterDel](./img/webpage.png)
+
+이것으로 익명게시판의 기능을 모두 점검해보았습니다. 추가로 다른 조원의 서비스에 접근해 확인해보는 것을 권장합니다.
+
+## 5.2. Server 확인하기
+
+> [!TIP]
+>
+> 후술할 과정으로 하나의 사용자 동작을 처리하기 위해 어떻게 요청이 전달되고 처리되는지 엿볼 수 있습니다. <br>
+> 더 나은 체험을 위해, 직접 웹서비스를 사용해보며 실시간 동작을 확인해보는 것을 권장합니다. 
+
+### 5.2.1 NGINX 확인
+앞서 언급했듯, NGINX는 요청을 대신 받아 직접 처리하거나, 다른 서버에게 요청을 넘겨주는 역할을 합니다.  
+NGINX가 어떻게 요청을 처리했는지 확인하려면 이의 로그를 확인해야 합니다. 이는 다음의 명령어로 확인할 수 있습니다.
+
+```bash
+# 이름을 모를 경우 `kubectl -n <your_namespace> get po`로 확인합니다.
+kubectl -n <your_namespace> logs po <nginx-proxy-pod>
+```
+
+로그를 통해 어떤 요청이 다른 서버에게 포워딩되었으며, 어떤 요청을 직접 처리했는지 확인할 수 있습니다.
+
+### 5.2.2 DB 확인
+웹서버는 데이터를 저장하기 위해 DB를 사용합니다. <br>
+여러분이 작성한 댓글이나 게시글은 DB에 저장되고, 사용자가 요청을 보낼 때마다 이를 꺼내어 전달해줍니다.
+
+그렇기에, DB의 Table을 확인하면 여러분의 웹서비스 화면에 보여졌던 것과 동일한 내용을 확인할 수 있습니다.
+
+먼저, PostgreSQL DB에 접근하기 위해, DB Pod에 접근하여 CLI 도구를 실행하도록 하겠습니다. 명령은 다음과 같이 입력합니다.
+
+```bash
+# 현 설정에서 PostgreSQL Pod의 이름은 postgres-0 입니다. 아닐 경우 `kubectl -n <your_namespace> get po`로 확인합니다.
+# `-U`: PostgreSQL에 등록된 사용자 ID 지정
+# `-d`: 접근 시 연결할 database 이름
+kubectl -n <your_namespace> exec -it po/postgres-0 -- psql -U myuser -d mydb
+```
+
+> [!note]
+>
+> 위의 명령은 "지정한 Pod에서 다음의 명령을 실행한다"는 의미입니다. 옵션은 다음과 같습니다.
+>
+> |Option|Description|
+> |:---|:---|
+> |`-n <namespace>`| Pod가 위치한 namespace를 지정합니다.|
+> |`-it`| `--stdin`(`-i`)와 `--tty`(`-t`) 옵션으로, 사용자 입력(키보드 등)을 `exec` 실행 동안 Pod에게 전달하기 위해 필요합니다.<br>(간단하게, TTY=로컬 콘솔 접근을 위한 드라이버 / PTY=원격 접속을 위한 드라이버) |
+> |`-- <cmd>`| Pod 내부에서 실행할 명령어를 지정합니다. `--`와 `<cmd>` 사이에 공백이 있으므로 주의합니다.|
+
+그러면 PostgreSQL CLI 도구가 활성화된 것을 볼 수 있습니다.
+![psql_start](img/psql_img.png)
+
+다음으로, 존재하는 Table 목록을 조회하기 위해 `\d`을 입력합니다. <br>
+![psql_tables](./img/psql_tables.png)
+
+> [!TIP]
+>
+> PostgreSQL에서 `\d`는 연결된 Database 내 Table 목록을 출력합니다. <br>
+> 그리고 `\d <table_name>`을 입력하면 Table의 Column 정보를 출력합니다.
+>
+> 또한, `\d`는 기본 정보만 출력하지만, `\d+`는 여러 세부 정보를 추가로 보여줍니다.
+
+여기서 `Post`가 작성한 게시글을 저장하는 Table이며, `Comment`가 댓글을 저장하는 Table입니다. <br>
+내용을 보기 위해, 다음의 명령을 입력합니다.
+```SQL
+-- ※ SQL은 `;`으로 끝맺어야 명령 입력이 완료되었다고 인식합니다. 
+SELECT * FROM "POST";     -- Post 전체 조회
+SELECT * FROM "Comment";  -- Comment 전체 조회
+```
+
+그러면 여러분이 입력했던 데이터가 출력될 것입니다.<br>
+참고로 Password는 보안을 위해 Hash Function으로 평문을 알아볼 수 없게 처리하니 유의하기 바랍니다.
+
+종료는 `\q`, 혹은 `ctrl+d`를 입력하면 됩니다.
 
 # 6. Lab Review
