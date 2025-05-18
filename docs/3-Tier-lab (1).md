@@ -654,9 +654,9 @@ kubectl get svc -n <your_namespace>
 
 # 4. Frontend Deployment on Kubernetes
 
-## 4.1 FE Deployment 배경지식 요약
+## 4-1. Frontend Deployment 배경지식 요약
 
-### 4.1.1 Kubernetes Object: ConfigMap
+### 4-1-1. Kubernetes Object: ConfigMap
 
 `4.2.1`에서 `ConfigMap`을 이용하여 설정 파일을 컨테이너에 삽입합니다. 그런데 여기서 사용하는 `ConfigMap`은 무엇일까요?
 
@@ -674,11 +674,11 @@ kubectl get svc -n <your_namespace>
 > 
 > 본 내용은 "시작하세요! 도커/쿠버네티스:친절한 설명으로 쉽게 이해하는 컨테이너 관리"(용찬호 저. 위키북스). pp 344~355의 내용을 일부 활용했습니다. 자세한 사항은 해당 도서를 참고해주시기 바랍니다. 
 
-### 4.1.2 React
+### 4-1-2. React
 
 Meta에서 개발한 Javascript 기반 Frontend 개발 라이브러리입니다. Angular와 Vue와 함께 Frontend 개발을 위해 주로 사용하는 라이브러리입니다.
 
-단일 HTML 페이지에서 Javascript를 통해 페이지를 부분적으로 변경하여 서비스를 제공하는 SPA(Single Page Application) 방식의 웹서비스를를 개발할 때 사용하며, 페이지의 구성요소를 Component라는 단위로 쪼개어 개발하고, 웹페이지를 동적으로 구성할 때 페이지 전체를 새로 구성하는 대신, 변경된 부분만을 수정합니다.
+단일 HTML 페이지에서 Javascript를 통해 페이지를 부분적으로 변경하여 서비스를 제공하는 SPA(Single Page Application) 방식의 웹서비스를 개발할 때 사용하며, 페이지의 구성요소를 Component라는 단위로 쪼개어 개발하고, 웹페이지를 동적으로 구성할 때 페이지 전체를 새로 구성하는 대신, 변경된 부분만을 수정합니다.
 
 웹서비스 뿐만 아니라, 모바일 환경과 같은 네이티브 환경에서 UI를 개발할 때에 사용할 수 있습니다.
 
@@ -686,7 +686,7 @@ Meta에서 개발한 Javascript 기반 Frontend 개발 라이브러리입니다.
 >
 > 본 실습을 진행하기 위해 React 프로젝트의 소스코드를 이해하지 않아도 되기에 많은 내용을 기술하지는 않았습니다. 하지만 React 코드가 궁금한 경우 `frontend/README.md`에 코드를 이해하는 데에 필요한 정보를 적어두었으니 참고하시기 바랍니다.
 
-### 4.1.3 NGINX
+### 4-1-3. NGINX
 
 사용자나 브라우저에게 HTML 및 Javascript를 제공하려면, Backend 서버가 사용자 요청에 따라 파일을 전달해주거나 Proxy 서버가 대신 파일을 전달해야 합니다. 전자의 경우 NestJS 서버에 별도의 설정을 통해 HTML 파일을 전달하도록 구성하며, 후자의 경우 NGINX를 도입하여 사용자의 요청을 NGINX가 대신 받고, 요청에 따라 파일을 전달해주거나, Backend 서버에게 요청을 포워딩합니다.
 
@@ -698,14 +698,14 @@ NGINX는 이러한 목적을 위해 사용할 수 있는 프록시 서버로, �
 
 본 실습에서는 React 프로젝트로 생성된 HTML 및 Javascript 파일을 사용자에게 전달하고, 요청을 Backend Server에게 포워딩하는 역할을 수행합니다. 이를 위해 사전에 빌드된 Docker 이미지를 활용할 예정입니다.
 
-## 4.2 Frontend Deployment on Kubernetes
+## 4-2. Frontend Deployment on Kubernetes
 
 > [!note]
 >
 > 본 실습은 사전에 빌드된 이미지파일을 사용합니다.  
 > 만약 웹UI를 수정하여 배포하고자 하는 경우, `./frontend` 경로에 프로젝트 원본 및 Dockerfile이 저장되어있으므로, 이를 활용하여 코드 수정 후 이미지를 새로 빌드해 활용하시기 바랍니다.
 
-### 4.2.1 Frontend ConfigMap 생성
+### 4-2-1. Frontend ConfigMap 생성
 
 먼저, HTML 및 Javascript 파일을 NGINX를 통해 브라우저에게 전달할 수 있도록 설정하기 위해, ConfigMap을 생성하도록 하겠습니다.
 
@@ -767,7 +767,7 @@ kubectl get cm -n <your_namespace>  # 네임스페이스에 존재하는 ConfigM
 kubectl describe cm nginx-proxy-cm -n <your_namespace> # nginx-proxy-cm의 내용 확인
 ```
 
-### 4.2.2 Frontend Deployment 생성
+### 4-2-2. Frontend Deployment 생성
 
 다음으로, HTML 파일이 포함된 NGINX Deployment를 생성하도록 하겠습니다.
 
@@ -836,9 +836,9 @@ kubectl get pod -n <your_namespace> # Deployment에 의한 Pod 생성 확인
 
 # 5. 배포된 웹 서비스 확인
 
-## 5.1. 브라우저 접근
+## 5-1. 브라우저 접근
 
-### 5.1.1. 웹서버 IP 확인
+### 5-1-1. 웹서버 IP 확인
 이제, 브라우저를 통해 배포된 웹 서비스에 접근하기 위해 다음을 입력하여 접근할 IP 주소를 확인하겠습니다.
 
 ```bash
@@ -857,7 +857,7 @@ kubectl get pod -n <your_namespace> -o wide
 > 일반적으로 Pod의 Cluster 내부 IP를 이용하여 Pod에 접근할 수 없으나, 장비가 Cluster의 Node로 포함된 경우에 한하여 직접 접근이 가능합니다.
 > 이는 각 Node에서 Pod에게 패킷을 전달하기 위해, Kernel Routing Table과 IPTables에 Pod에게 패킷을 전달할 방법을 명시하기 때문입니다.
 
-### 5.1.2 웹서비스 확인
+### 5-1-2. 웹서비스 확인
 
 브라우저의 주소창에 `http://<nginx-ip-addr>`을 입력해 접근합니다. 그러면 다음과 같은 화면이 표시됩니다. 
 
@@ -915,14 +915,14 @@ kubectl get pod -n <your_namespace> -o wide
 
 이것으로 익명게시판의 기능을 모두 점검해보았습니다. 추가로 다른 조원의 서비스에 접근해 확인해보는 것을 권장합니다.
 
-## 5.2. Server 확인하기
+## 5-2. Server 확인하기
 
 > [!TIP]
 >
 > 후술할 과정으로 하나의 사용자 동작을 처리하기 위해 어떻게 요청이 전달되고 처리되는지 엿볼 수 있습니다. <br>
 > 더 나은 체험을 위해, 직접 웹서비스를 사용해보며 실시간 동작을 확인해보는 것을 권장합니다. 
 
-### 5.2.1 NGINX 확인
+### 5-2-1. NGINX 확인
 앞서 언급했듯, NGINX는 요청을 대신 받아 직접 처리하거나, 다른 서버에게 요청을 넘겨주는 역할을 합니다.  
 NGINX가 어떻게 요청을 처리했는지 확인하려면 이의 로그를 확인해야 합니다. 이는 다음의 명령어로 확인할 수 있습니다.
 
@@ -933,7 +933,7 @@ kubectl -n <your_namespace> logs po <nginx-proxy-pod>
 
 로그를 통해 어떤 요청이 다른 서버에게 포워딩되었으며, 어떤 요청을 직접 처리했는지 확인할 수 있습니다.
 
-### 5.2.2 DB 확인
+### 5-2-2. DB 확인
 웹서버는 데이터를 저장하기 위해 DB를 사용합니다. <br>
 여러분이 작성한 댓글이나 게시글은 DB에 저장되고, 사용자가 요청을 보낼 때마다 이를 꺼내어 전달해줍니다.
 
