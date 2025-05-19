@@ -2,7 +2,7 @@
 
 # 0. Objective
 
-이번 실습에서는 쿠버네티스(Kubernetes) 환경에서 **3 Tier Architecture**를 기반으로 한 웹 서비스 백엔드를 배포하는 과정을 다룹니다.
+이번 실습에서는 쿠버네티스(Kubernetes) 환경에서 **3 Tier Architecture**를 기반으로 한 웹 서비스를 배포하는 과정을 다룹니다.
 전체 실습은 2주간 진행되며, 그 중 1주차 실습은 다음의 요소를 중점으로 다룹니다.
 
 - PostgreSQL Database를 쿠버네티스 위에 배포
@@ -13,7 +13,7 @@
 >
 > 이번 Lab은 <b>Lab#5 (Cluster Lab)</b>에서 구성한 Kubernetes Cluster 위에서 진행되며, 클러스터는 다음과 같은 구성입니다.
 >
-> ![Kubernets Installation](img/nuc-prep.png)
+> ![Kubernetes Installation](img/nuc-prep.png)
 >
 > 각 실습자는 각자의 PC에서 <b>NUC1(master node)</b>에 원격 접속(SSH)하여 Kubernetes namespace를 생성하고, namespace로 분리된 환경에서 실습을 진행합니다.
 
@@ -34,9 +34,9 @@
    - 브라우저에서 실행되는 React, Vue, Angular 등의 웹 프레임워크/라이브러리가 대표적입니다.
    - 모바일 앱도 이 계층에 해당되며 네이티브로는 안드로이드, SwiftUI, 크로스플랫폼으로 Flutter나 React Native가 대표적입니다.
 2. Application Tier (백엔드)
-   - Application Tier로부터 발생한 사용자의 요청을 처리하고, 비즈니스 로직을 수행하며, 데이터베이스와 통신합니다.
+   - Presentation Tier로부터 발생한 사용자의 요청을 처리하고, 비즈니스 로직을 수행하며, 데이터베이스와 통신합니다.
    - 보통 Express, NestJS, Django, Spring 등으로 개발된 서버 애플리케이션이 위치합니다.
-   - Buisiness Logic Tier, Transaction Tier라고도 불립니다.
+   - Business Logic Tier, Transaction Tier라고도 불립니다.
 3. Data Tier (데이터베이스)
    - 데이터베이스와 데이터베이스에 접근하여 데이터를 읽거나 쓰는 것을 관리하는 계층입니다.
    - 애플리케이션의 데이터를 영구적으로 저장합니다.
@@ -196,7 +196,7 @@ kubectl get pods -A
 kubectl get namespace
 
 # <your_namespace>에는 각자 작업 중인 PC에 따라 nuc01, nuc02, 또는 nuc03을 입력하세요
-kubectl create namesapce <your_namespace>
+kubectl create namespace <your_namespace>
 
 # 생성된 본인의 namespace 확인
 kubectl get namespace
@@ -388,9 +388,9 @@ ls # 실습 템플릿 확인
 
 ## 3-1. Database Deployment on Kubernetes
 
-### 3-1-1. Persistent Voluem 생성
+### 3-1-1. Persistent Volume 생성
 
-#### Persisten Volume이란?
+#### Persistent Volume이란?
 
 > **PersistentVolume(PV)**: 쿠버네티스 클러스터의 노드에 존재하는 실제 스토리지를 나타냅니다. Pod가 사라져도 데이터는 남아있을 수 있도록, 외부 스토리지(예: 디스크)에 대한 연결 정보를 정의합니다.
 >
@@ -985,3 +985,14 @@ SELECT * FROM "Comment";  -- Comment 전체 조회
 종료는 `\q`, 혹은 `ctrl+d`를 입력하면 됩니다.
 
 # 6. Lab Review
+이번 Lab에서는 `3-tier 구조`의 웹 서비스를 kubernetes 환경에서 배포하는 경험을 해보았습니다.  
+
+3-tier 구조는 사용자와 직접 상호작용하는 `Presentation Tier`, Presentation tier에서 발생한 요청을 처리하고 데이터베이스와 통신하는 `Application Tier`, 생성된 데이터를 영구적으로 저장 및 관리하는 `Data Tier`의 형태를 나타냅니다.  
+
+이러한 구조를 가진 서비스를 container orchestration 도구인 kubernetes를 이용하여 배포해보았습니다. 실습을 위해 적은 수의 pod가 생성되도록 했지만, 규모있는 실제 서비스를 운영하게 된다면 kubernetes 환경에서 손쉽게 scaling을 할 수 있다는 특성을 바탕으로 적은 노력을 들여 안정적인 서비스를 운영할 수 있을 것입니다.  
+
+우리는 yaml 파일을 통한 `선언형` 방식을 통해, kubernetes의 다양한 리소스를 생성할 수 있었고 Frontend, Backend, Database를 배포하여 서비스의 작동을 확인할 수 있었습니다.  
+
+또한, Frontend(Presentation Tier)와 Backend(Application Tier) 사이의 proxy server 역할을 하는 NGINX도 사용해보았습니다. 
+
+이번 실습을 응용한다면, 여러분은 각자 본인만의 Frontend, Backend 서비스를 개발하고, 이를 Database와 함께 container image로 만든 후, kubernetes 환경에서 배포할 수 있을 것입니다. 이를 통해 구조를 갖춘 하나의 서비스를 개발하는 경험을 해볼 수 있을 것입니다.
