@@ -27,7 +27,7 @@ spec:
             - key: kubernetes.io/hostname
               operator: In
               values:
-                - <your_namespace>
+                - <your_hostname>
 ```
 
 ```shell
@@ -82,11 +82,14 @@ spec:
       labels:
         app: container-image-registry
     spec:
+      nodeSelector: 
+        kubernetes.io/hostname: <your_hostname> 
       containers:
         - name: registry
           image: registry:2
           ports:
             - containerPort: 5000
+              hostPort: 5000
           volumeMounts:
             - name: registry-storage
               mountPath: /var/lib/registry
@@ -104,30 +107,6 @@ kubectl get deploy -n <your_namespace>
 ```
 
 ```shell
-vim container-image-registry-svc.yaml
-```
-
-```yaml
-apiVersion: v1
-kind: Service
-metadata:
-  name: container-image-registry
-  namespace: <your_namespace>
-spec:
-  selector:
-    app: container-image-registry
-  ports:
-    - port: 80
-      targetPort: 5000
-  type: ClusterIP
-```
-
-```shell
-kubectl apply -f container-image-registry-svc.yaml
-kubectl get service -n <your_namespace>
-```
-
-```shell
 sudo vim /etc/docker/daemon.json
 ```
 
@@ -136,15 +115,23 @@ sudo systemctl restart docker
 ```
 
 ```shell
+sudo vim /etc/containerd/config.toml
+```
+
+```shell
+sudo systemctl restart containerd
+```
+
+```shell
 sudo docker build -t <your_namespace>-frontend ~/<your_namespace>/3-tier-lab/frontend
-sudo docker tag <your_namespace>-frontend <svc-ip>/<your_namespace>-frontend
-sudo docker push <svc-ip>/<your_namespace>-frontend
+sudo docker tag <your_namespace>-frontend <your_hostname>:5000/<your_namespace>-frontend
+sudo docker push <your_hostname>:5000/<your_namespace>-frontend
 ```
 
 ```shell
 sudo docker build -t <your_namespace>-backend ~/<your_namespace>/3-tier-lab/backend
-sudo docker tag <your_namespace>-backend <svc-ip>/<your_namespace>-backend
-sudo docker push <svc-ip>/<your_namespace>-backend
+sudo docker tag <your_namespace>-backend <your_hostname>:5000/<your_namespace>-backend
+sudo docker push <your_hostname>:5000/<your_namespace>-backend
 ```
 
 ```shell
